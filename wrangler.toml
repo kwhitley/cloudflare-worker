@@ -1,0 +1,9 @@
+account_id = "ac29ce961091a45f22b60d762e3e33a8"
+name = "durable-rpc"
+compatibility_date = "2024-01-01"
+workers_dev = false
+main = "./src/index.ts"
+routes = [
+  'test.com',
+  'test.com/*'
+]

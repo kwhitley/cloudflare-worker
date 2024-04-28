@@ -1,0 +1,19 @@
+{
+  "name": "durable-rpc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "release": "release --push --nopublish --patch",
+    "postrelease": "wrangler publish",
+    "tail": "wrangler tail"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240423.0",
+    "itty-router": "^5.0.17",
+    "typescript": "^5.4.5"
+  }
+}
