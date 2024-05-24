@@ -1,31 +1,22 @@
 import { AutoRouter } from 'itty-router'
 export { Counter } from './objects/Counter'
 
-const withDurables = (request, env) => {
-  request.proxy = new Proxy(request.proxy ?? request, {
-    get: (target: Request, prop: string, receiver) => {
-      if (target[prop] != undefined)
-        return target[prop]
-
-      const DO = env[prop], isDO = DO?.idFromName
-      if (!isDO) return undefined
-
-      return (id) =>
-        typeof id == 'string'
-        ? DO.get(DO.idFromName(id))
-        : DO.get(id)
-      }
-    }
-  )
+export const withDO = (request: any, env: any) => {
+  for (const [k, v] of Object.entries(env)) {
+    // @ts-ignore
+    if (v?.idFromName)
+      // @ts-ignore
+      request[k] = request[k] ?? ((id: any) => typeof id == 'string' ? v.get(v.idFromName(id)) : v.get(id))
+  }
 }
 
 const router = AutoRouter({
-  before: [withDurables],
+  before: [withDO],
 })
 
 router
-  .get('/increment', ({ Counter }) =>
-    Counter('foo').increment()
+  .get('/increment/:by', ({ Counter, by }) =>
+    Counter('foo').increment(by)
   )
   .get('/reset', ({ Counter }) =>
     Counter('foo').reset()

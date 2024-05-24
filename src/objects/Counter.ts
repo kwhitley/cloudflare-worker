@@ -1,59 +1,56 @@
 import { DurableObject } from 'cloudflare:workers'
+import { IttyDurable } from './IttyDurable'
 
-class IttyDurable extends DurableObject {
-  persisted
-  #persistTimer
-  #persistDelay = 5000
-  #persistLoaded
+const DEFAULTS = {
+  value: 0,
+  persisted: { counter: 0 },
+}
 
-  constructor(...args: any) {
-    super(...args)
+let value = 400
 
-    return new Proxy(this, {
-      get: (obj, prop, receiver, target = obj[prop]) =>
-        (typeof target == 'function' && this.persist(prop))
-        || target?.bind?.(obj) || target
-    })
-  }
-
-  async isLoaded() {
-    if (this.#persistLoaded) return true
-    this.persisted = await this.ctx.storage.get('value')
-    return this.#persistLoaded = true
-  }
-
-  persist(methodName) {
-    if (!this.persisted) return
-
-    clearTimeout(this.#persistTimer)
-    this.#persistTimer = setTimeout(() => {
-      this.ctx.storage.put('value', this.persisted)
-    }, this.#persistDelay)
-  }
-
-  toJSON() {
-    const { ctx, env, ...other } = this
-    return other
+const externalStore = {
+  get() {
+    return { counter: value }
+  },
+  put(newValue) {
+    console.log('setting value of this', this, 'to', newValue)
+    value = newValue
   }
 }
 
 export class Counter extends IttyDurable {
+  // anything here is in-memory only
   value = 0
-  persisted: any = {
+
+  store = externalStore
+
+  // store = {
+  //   get: () => ({ counter: 200 }),
+  //   put: (value) => {}
+  // }
+
+  // anything here is persisted
+  persisted = {
     counter: 0,
   }
 
-  async increment() {
-    await this.isLoaded()
-    this.value++
-    this.persisted.counter = (this.persisted.counter || 0) + 1
+  test1(...messages: string[]) {
+    console.log('test 1', messages)
+  }
+
+  add(a: number, b: number) {
+    return a + b
+  }
+
+  async increment(by = 1) {
+    this.value += Number(by)
+    this.persisted.counter++
 
     return this.toJSON()
   }
 
   reset() {
-    this.value = 0
-    this.persisted = undefined
+    Object.assign(this, DEFAULTS)
 
     return this.toJSON()
   }
